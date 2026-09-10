@@ -593,7 +593,12 @@ func (sm *SecretsManager) createSecretWithContext(ctx context.Context, secretNam
 		Description:        new(mdata.Spec.Description),
 		ClientRequestToken: new(initialVersion),
 		KmsKeyId:           kmsKeyID,
-		AddReplicaRegions:  buildReplicationRegionType(mdata.Spec.ReplicationLocations, kmsKeyID),
+	}
+	// Only set AddReplicaRegions when replication locations are requested.
+	// AWS rejects an empty (but present) AddReplicaRegions slice with a
+	// ValidationException ("Member must have length greater than or equal to 1").
+	if len(mdata.Spec.ReplicationLocations) > 0 {
+		input.AddReplicaRegions = buildReplicationRegionType(mdata.Spec.ReplicationLocations, kmsKeyID)
 	}
 	if mdata.Spec.SecretPushFormat == SecretPushFormatString {
 		input.SecretBinary = nil
